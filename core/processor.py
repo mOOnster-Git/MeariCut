@@ -1,8 +1,13 @@
 import os
 import sys
 import shutil
-import whisper
-import torch
+try:
+    import whisper
+    import torch
+except Exception as e:
+    print(f"Error importing torch/whisper in processor: {e}")
+    whisper = None
+    torch = None
 import random
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
@@ -40,7 +45,14 @@ class MeariProcessor:
         triggers: Optional[List[str]] = None,
     ) -> None:
         self.model_name = model_name
-        
+
+        if torch is None or whisper is None:
+            raise RuntimeError(
+                "분석 엔진(torch/whisper)을 불러오지 못했습니다.\n"
+                "Python 환경에서는 정상 동작하지만, 현재 exe 실행 환경에서는\n"
+                "필수 라이브러리 초기화에 실패했습니다."
+            )
+
         # [Device Auto-Detection]
         if device is None:
             if torch.cuda.is_available():
@@ -51,7 +63,7 @@ class MeariProcessor:
                 print("⚠️ No GPU detected, using CPU (slower)")
         else:
             self.device = device
-            
+
         self.triggers = triggers or ["시작", "하나둘셋", "둘셋"]
         self.model = None
 

@@ -1,16 +1,7 @@
 import sys
 import os
 
-# Debug logging setup
-import datetime as dt
-DEBUG_LOG_FILE = os.path.abspath("ui_debug.log")
-def debug_log(msg):
-    print(f"[UI_DEBUG] {msg}", flush=True)
-    try:
-        with open(DEBUG_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"[{dt.datetime.now()}] {msg}\n")
-    except Exception as e:
-        print(f"[UI_DEBUG_ERROR] {e}", flush=True)
+# Debug logging removed
 
 # 직접 실행 시 프로젝트 루트 경로 추가 (core 모듈 import 위해)
 if __name__ == "__main__":
@@ -970,21 +961,17 @@ class SaveThread(QThread):
 
 class MainWindow(QMainWindow):
     def __init__(self, parent: QWidget | None = None) -> None:
-        debug_log("MainWindow.__init__ start")
         super().__init__(parent)
         
         # 프로그램 버전 정보 (version.py 연동)
         self.program_version = f"v{version.VERSION}"
-        debug_log(f"Version: {self.program_version}")
         
         self.setWindowTitle(f"MeariCut {self.program_version}")
         self.resize(880, 670)  # 초기 크기 설정 (880x670)
-        debug_log("Window resized")
 
         self.player = QMediaPlayer(self)
         self.audio_output = QAudioOutput(self)
         self.player.setAudioOutput(self.audio_output)
-        debug_log("QMediaPlayer initialized")
 
         self.current_video_path: Path | None = None
         self.analyzed_intervals: list[tuple[float, float]] = []
@@ -992,14 +979,11 @@ class MainWindow(QMainWindow):
         self.analysis_thread: AnalyzeThread | None = None
         self.save_thread: SaveThread | None = None
 
-        debug_log("Calling _setup_ui")
         self._setup_ui()
-        debug_log("Calling _apply_styles")
         self._apply_styles()
 
         # 전역 이벤트 필터 설치 (스페이스바 처리용)
         QApplication.instance().installEventFilter(self)
-        debug_log("Event filter installed")
 
         # 타임라인 및 비디오 플레이어 시그널 연결
         self.player.positionChanged.connect(self._on_video_position_changed)
@@ -1011,7 +995,6 @@ class MainWindow(QMainWindow):
         self.show()
         self.activateWindow()
         self.raise_()
-        debug_log("MainWindow.__init__ finished")
 
     def resizeEvent(self, event) -> None:
         if hasattr(self, "loading_overlay") and self.loading_overlay:
@@ -1877,7 +1860,6 @@ class MainWindow(QMainWindow):
                 self.timeline.update()
         else:
             # 유지 모드: 기존 결과 보존
-            debug_log("Keeping existing results...")
             pass
 
         # 오버레이 표시 (UI 비활성화는 show_loading에서 처리됨)
@@ -1902,8 +1884,6 @@ class MainWindow(QMainWindow):
         
         # [Merge Logic] 기존 결과 유지 모드일 경우 병합
         if hasattr(self, 'keep_existing') and self.keep_existing:
-            debug_log("Merging new results with existing results...")
-            
             # 1. 트리거 병합 (중복 제거)
             # 기존 트리거 + 새 트리거
             # 중복 판단 기준: start, end 시간이 거의 같으면 중복으로 처리
@@ -2224,11 +2204,15 @@ class MainWindow(QMainWindow):
         self.save_thread.start()
 
     def _on_save_finished(self, success, msg) -> None:
-        self.hide_loading()
-        if success:
-            QMessageBox.information(self, "완료", f"저장 완료!\n{msg}")
-        else:
-            QMessageBox.critical(self, "오류", f"저장 실패:\n{msg}")
+        try:
+            self.hide_loading()
+            
+            if success:
+                QMessageBox.information(self, "완료", f"저장 완료!\n{msg}")
+            else:
+                QMessageBox.critical(self, "오류", f"저장 실패:\n{msg}")
+        except Exception as e:
+            traceback.print_exc()
 
     def _on_video_position_changed(self, position_ms: int) -> None:
         if self.total_duration > 0:
