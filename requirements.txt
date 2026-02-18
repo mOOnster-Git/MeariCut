@@ -1,0 +1,16 @@
+# GUI
+PyQt6>=6.6.0
+
+# Audio/Video Processing
+moviepy>=1.0.3
+imageio-ffmpeg>=0.4.9
+numpy>=1.24.0
+pydub>=0.25.1
+
+# AI / Speech Recognition (Whisper)
+openai-whisper>=20231117
+torch>=2.1.0
+
+# Utils
+tqdm>=4.66.0
+python-dotenv>=1.0.0
